@@ -109,6 +109,14 @@ function safeCompare(input, expected) {
   return crypto.timingSafeEqual(left, right);
 }
 
+function normalizeUsername(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isValidPasswordInput(input, expected) {
+  return safeCompare(input, expected) || safeCompare(String(input || '').trim(), expected);
+}
+
 function getAuth(req) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -191,11 +199,12 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/login' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      if (!safeCompare(body.username, ADMIN_USER) || !safeCompare(body.password, ADMIN_PASS)) {
+      if (normalizeUsername(body.username) !== normalizeUsername(ADMIN_USER) || !isValidPasswordInput(body.password, ADMIN_PASS)) {
         return json(res, 401, { message: 'Credenciales inválidas' });
       }
-      const token = issueToken(body.username);
-      return json(res, 200, { token, user: { username: body.username, role: 'admin' } });
+      const normalizedUser = String(body.username || '').trim() || ADMIN_USER;
+      const token = issueToken(normalizedUser);
+      return json(res, 200, { token, user: { username: normalizedUser, role: 'admin' } });
     }
 
     if (pathname.startsWith('/api/')) {
