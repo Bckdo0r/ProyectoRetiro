@@ -6,6 +6,14 @@ const crypto = require('crypto');
 const PORT = Number(process.env.PORT || 3000);
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+const SESSION_DURATION_MS = 1000 * 60 * 60 * 24;
+const BODY_SIZE_LIMIT = 1_000_000;
+const IS_PROD = process.env.NODE_ENV === 'production';
+const SESSION_CLEANUP_INTERVAL_MS = 1000 * 60 * 10;
+
+if (IS_PROD && !process.env.ADMIN_PASS) {
+  throw new Error('ADMIN_PASS es obligatoria en producción');
+}
 const ROOT_DIR = __dirname;
 const DATA_DIR = path.join(ROOT_DIR, 'data');
 const STATE_FILE = path.join(DATA_DIR, 'state.json');
@@ -68,7 +76,7 @@ function readJsonBody(req) {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 1e6) {
+      if (body.length > BODY_SIZE_LIMIT) {
         req.destroy();
         reject(new Error('Payload demasiado grande'));
       }
@@ -90,8 +98,15 @@ function readJsonBody(req) {
 
 function issueToken(username) {
   const token = crypto.randomBytes(24).toString('hex');
-  sessions.set(token, { username, expiresAt: Date.now() + 1000 * 60 * 60 * 24 });
+  sessions.set(token, { username, expiresAt: Date.now() + SESSION_DURATION_MS });
   return token;
+}
+
+function safeCompare(input, expected) {
+  const left = Buffer.from(String(input || ''), 'utf-8');
+  const right = Buffer.from(String(expected || ''), 'utf-8');
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
 }
 
 function getAuth(req) {
@@ -104,6 +119,15 @@ function getAuth(req) {
     return null;
   }
   return { token, ...session };
+}
+
+function cleanupExpiredSessions() {
+  const now = Date.now();
+  for (const [token, session] of sessions.entries()) {
+    if (!session || session.expiresAt < now) {
+      sessions.delete(token);
+    }
+  }
 }
 
 function sanitizeState(input) {
@@ -120,12 +144,22 @@ function sanitizeState(input) {
   };
 }
 
+function normalizeHouse(house) {
+  const safeHouse = String(house || 'Villa Marista')
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
+    .slice(0, 40);
+  return safeHouse || 'Villa Marista';
+}
+
 function archiveCurrentState(house) {
   const state = readState();
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const archiveName = `${timestamp}-${(house || 'villa-marista').toString().toLowerCase().replace(/[^a-z0-9-]+/g, '-')}.json`;
+  const safeHouse = normalizeHouse(house);
+  const slug = safeHouse.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+  const archiveName = `${timestamp}-${slug}.json`;
   const archivePath = path.join(ARCHIVE_DIR, archiveName);
-  fs.writeFileSync(archivePath, JSON.stringify({ archivedAt: new Date().toISOString(), house: house || 'Villa Marista', state }, null, 2), 'utf-8');
+  fs.writeFileSync(archivePath, JSON.stringify({ archivedAt: new Date().toISOString(), house: safeHouse, state }, null, 2), 'utf-8');
   return archiveName;
 }
 
@@ -157,7 +191,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/login' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      if (body.username !== ADMIN_USER || body.password !== ADMIN_PASS) {
+      if (!safeCompare(body.username, ADMIN_USER) || !safeCompare(body.password, ADMIN_PASS)) {
         return json(res, 401, { message: 'Credenciales inválidas' });
       }
       const token = issueToken(body.username);
@@ -225,5 +259,9 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Servidor iniciado en http://localhost:${PORT}`);
-  console.log(`Usuario admin: ${ADMIN_USER}`);
+  if (!process.env.ADMIN_PASS) {
+    console.warn('⚠️  ADMIN_PASS no está configurada. Se está usando una contraseña por defecto solo para desarrollo.');
+  }
 });
+
+setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);

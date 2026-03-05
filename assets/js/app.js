@@ -1,7 +1,7 @@
 // ── STATE ──
 let rooms=[], people=[], retiro={total:0,menor:0};
 let nRId=1, nPId=1, _eRoomId=null, _addSector='CG', _vPId=null;
-let authToken=localStorage.getItem('retiro-auth-token')||'';
+let authToken=sessionStorage.getItem('retiro-auth-token')||'';
 let savePending=false;
 let isBootstrapping=true;
 const SAVE_STATUS={
@@ -11,12 +11,7 @@ const SAVE_STATUS={
   saved:'Cambios guardados automáticamente',
   error:'No se pudo guardar. Reintentando automáticamente…'
 };
-
-// ── SEED: 34 + 4 rooms ──
-(function(){
-  for(let i=1;i<=34;i++) rooms.push({id:nRId++,nombre:'Habitación '+i,sector:'CG',capacidad:4,personas:[]});
-  for(let i=1;i<=4;i++)  rooms.push({id:nRId++,nombre:'Chalecito '+i,sector:'CH',capacidad:4,personas:[]});
-})();
+const AUTOSAVE_INTERVAL_MS=15000;
 
 function setSaveStatus(type){
   const el=document.getElementById('save-status');
@@ -62,7 +57,7 @@ async function login(){
     msg.style.color='var(--muted)';
     const data=await apiFetch('/api/login',{method:'POST',body:JSON.stringify({username,password})});
     authToken=data.token||'';
-    localStorage.setItem('retiro-auth-token',authToken);
+    sessionStorage.setItem('retiro-auth-token',authToken);
     document.getElementById('m-login').classList.remove('active');
     await loadServerState();
     isBootstrapping=true;
@@ -241,7 +236,7 @@ function confirmEditRoom(){
 }
 function deleteRoom(rId){
   const r=rooms.find(x=>x.id===rId);if(!r)return;
-  openConfirm('Eliminar habitacion', 'Eliminar la habitacion "'+r.nombre+'" y mover sus ocupantes a sin habitacion?', function(){
+  openConfirm('Eliminar habitación', 'Eliminar la habitación "'+r.nombre+'" y mover sus ocupantes a sin habitación?', function(){
     r.personas.forEach(pid=>{const p=people.find(x=>x.id===pid);if(p)p.roomId=null;});
     rooms=rooms.filter(x=>x.id!==rId);render();
   });
@@ -578,7 +573,7 @@ function openConfirm(title, msg, cb){
 function openResetConfirm(){
   openConfirm(
     'Limpiar todo',
-    'Esta accion eliminara todas las personas anotadas, en lista de espera y reseteara las habitaciones. Los precios se mantienen. No se puede deshacer.',
+    'Esta acción eliminará todas las personas anotadas, en lista de espera y reseteará las habitaciones. Los precios se mantienen. No se puede deshacer.',
     async function(){
       try{
         const data=await apiFetch('/api/reset',{method:'POST'});
@@ -605,7 +600,7 @@ async function archiveRetiro(){
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 
-setInterval(()=>{persistState();},15000);
+setInterval(()=>{persistState();},AUTOSAVE_INTERVAL_MS);
 
 async function bootstrap(){
   if(!authToken){
@@ -622,7 +617,7 @@ async function bootstrap(){
     setSaveStatus('clean');
     document.getElementById('m-login').classList.remove('active');
   }catch(_){
-    localStorage.removeItem('retiro-auth-token');
+    sessionStorage.removeItem('retiro-auth-token');
     authToken='';
     document.getElementById('m-login').classList.add('active');
     setSaveStatus('clean');

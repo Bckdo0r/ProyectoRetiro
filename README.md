@@ -15,6 +15,8 @@ Abrir en `http://localhost:3000`.
 - Usuario: `admin`
 - Contraseña: `admin123`
 
+> ⚠️ La contraseña por defecto es solo para entorno local/desarrollo. En producción configurá `ADMIN_PASS`.
+
 Podés cambiarlos con variables de entorno:
 
 - `ADMIN_USER`
