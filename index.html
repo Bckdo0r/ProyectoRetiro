@@ -1,19 +1,317 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto Retiro</title>
-    <link rel="stylesheet" href="./assets/css/styles.css">
-    <script src="./assets/js/app.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto Retiro - Villa Marista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
 <body>
-    <nav>
-        <button onclick="openArchiveConfirm()">🗃 Archivar retiro</button>
-        <button onclick="limpiarTodo()">Limpiar todo</button>
-    </nav>
-    <main>
-        <!-- Add remaining content from crudo.html's body here, excluding <style> and <script> blocks -->
-    </main>
+
+<header>
+  <h1>Casa de <span>Retiro</span> · Villa Marista</h1>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="s-p">0</div><div class="stat-label">Personas</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num" id="s-c">0</div><div class="stat-label">Capacidad</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num" id="s-l">0</div><div class="stat-label">Libres</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num warn" id="s-sh">0</div><div class="stat-label">Sin hab.</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num warn" id="s-e">0</div><div class="stat-label">Espera</div></div>
+  </div>
+  <div class="tag" id="save-status" style="color:#c8bfb0">Sin cambios pendientes</div>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('gestion')">🏠 Gestión</button>
+  <button class="nav-tab" onclick="showPage('lista')">📋 Lista general</button>
+  <button class="nav-tab" onclick="archiveRetiro()">🗃 Archivar retiro</button>
+  <button class="nav-tab" style="margin-left:auto;color:#c07060" onclick="openResetConfirm()">🗑 <span class="nav-tab-reset-text">Limpiar todo</span></button>
+</div>
+
+<!-- ═══ PAGE GESTIÓN ═══ -->
+<div id="page-gestion" class="page active">
+<div class="main">
+<div class="col-left">
+
+  <!-- CASA GRANDE -->
+  <div class="card">
+    <div class="card-header" style="cursor:pointer" onclick="toggleSection('cg')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="toggle-arrow" id="arrow-cg">▼</span>
+        <div><div class="card-title">Casa Grande</div><div class="tag" id="tag-cg"></div></div>
+      </div>
+    </div>
+    <div id="section-cg" class="section-body">
+      <!-- Planta Alta: hab 1-13 -->
+      <div class="subsector-header" onclick="toggleSubsector('cg-alta')">
+        <span class="toggle-arrow-sm" id="arrow-cg-alta">▾</span>
+        <span class="subsector-label">Planta Alta</span>
+        <span class="subsector-tag" id="tag-cg-alta"></span>
+      </div>
+      <div id="grid-cg-alta" class="rooms-grid subsector-grid"></div>
+      <!-- VIP: hab 16-20 -->
+      <div class="subsector-header" onclick="toggleSubsector('cg-vip')">
+        <span class="toggle-arrow-sm" id="arrow-cg-vip">▾</span>
+        <span class="subsector-label">VIP</span>
+        <span class="subsector-tag" id="tag-cg-vip"></span>
+      </div>
+      <div id="grid-cg-vip" class="rooms-grid subsector-grid"></div>
+      <!-- Planta Baja: 14,15,21-34 -->
+      <div class="subsector-header" onclick="toggleSubsector('cg-baja')">
+        <span class="toggle-arrow-sm" id="arrow-cg-baja">▾</span>
+        <span class="subsector-label">Planta Baja</span>
+        <span class="subsector-tag" id="tag-cg-baja"></span>
+      </div>
+      <div id="grid-cg-baja" class="rooms-grid subsector-grid"></div>
+    </div>
+  </div>
+
+  <!-- CHALECITO -->
+  <div class="card">
+    <div class="card-header" style="cursor:pointer" onclick="toggleSection('ch')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="toggle-arrow" id="arrow-ch">▼</span>
+        <div><div class="card-title">Chalecito</div><div class="tag" id="tag-ch"></div></div>
+      </div>
+    </div>
+    <div id="section-ch" class="section-body">
+      <div id="grid-ch" class="rooms-grid"></div>
+    </div>
+  </div>
+
+</div>
+<div class="col-right">
+
+  <!-- Precio -->
+  <div class="price-card">
+    <div class="price-top">
+      <div>
+        <div class="price-label">Precio del retiro</div>
+        <div class="price-big">$<span id="pv-total">0</span></div>
+      </div>
+      <button class="btn-edit-price" onclick="openPriceModal()">✎ Editar</button>
+    </div>
+    <div class="price-row">
+      <div><div class="price-sub-label">Precio menores (13–17)</div><div class="price-sub-val">$<span id="pv-menor">0</span></div></div>
+      <div style="text-align:right"><div class="price-sub-label">Menores de 12</div><div class="price-sub-val" style="font-size:0.9rem;color:#9b8570;">Becados 100%</div></div>
+    </div>
+  </div>
+
+  <!-- Sin habitación -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Sin habitación</div><span class="tag" id="cnt-sh">0</span></div>
+    <div class="side-list" id="list-sinHab"></div>
+  </div>
+
+  <!-- Lista de espera -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Lista de espera</div><span class="tag" id="cnt-wait">0</span></div>
+    <div class="side-list" id="list-wait"></div>
+  </div>
+
+  <!-- Agregar persona -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">Agregar persona</div></div>
+    <div class="form-body">
+      <div class="fg"><label>Nombre completo *</label><input type="text" id="f-nombre" placeholder="Ej: María García López"></div>
+      <div class="form-row">
+        <div class="fg"><label>Edad</label><input type="number" id="f-edad" placeholder="Años" min="1" max="120" oninput="onEdadChange()"></div>
+        <div class="fg"><label>Ciudad</label><input type="text" id="f-ciudad" placeholder="Ej: Córdoba"></div>
+      </div>
+      <div class="fg"><label>Teléfono (opcional)</label><input type="tel" id="f-tel" placeholder="Ej: 11 2345-6789"></div>
+      <div class="fg"><label>Grupo familiar (opcional)</label><input type="text" id="f-grupo" placeholder="Ej: López"></div>
+      <div class="form-row">
+        <div class="fg"><label>Menú</label>
+          <select id="f-comida">
+            <option value="normal">Normal</option>
+            <option value="vegetariano">Vegetariano</option>
+          </select>
+        </div>
+        <div class="fg" style="flex:2"><label>Nota (opcional)</label><input type="text" id="f-nota" placeholder="Ej: celíaca, alergia..."></div>
+      </div>
+      <div class="fg">
+        <label>Estado de pago</label>
+        <select id="f-pago" onchange="onPagoChange('f')">
+          <option value="pendiente">Pendiente</option>
+          <option value="seña">Seña</option>
+          <option value="pagado">Pagado</option>
+          <option value="becado">Becado 100%</option>
+        </select>
+      </div>
+      <div class="pago-extra" id="f-seña-x">
+        <div class="fg"><label>Monto señado ($)</label><input type="number" id="f-señaM" placeholder="0" min="0"></div>
+      </div>
+      <div id="f-age-hint" style="display:none;font-size:0.72rem;padding:6px 10px;border-radius:6px;background:#f0e8f5;color:#6a3a7a;"></div>
+      <div style="display:flex;gap:7px;margin-top:3px;">
+        <button class="btn-main" style="flex:2" onclick="addPerson(false)">✓ Agregar</button>
+        <button class="btn-main sec" style="flex:1" onclick="addPerson(true)">+ Espera</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div><!-- /page-gestion -->
+
+<!-- ═══ PAGE LISTA ═══ -->
+<div id="page-lista" class="page">
+  <div style="max-width:1220px;margin:0 auto;padding:26px;">
+    <div class="print-info" id="print-date"></div>
+    <div class="lista-controls">
+      <div class="lista-title">Lista General de Inscriptos</div>
+      <button class="btn-print" onclick="doPrint()">🖨 Imprimir</button>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="filt-q" placeholder="Buscar nombre..." oninput="renderLista()" style="min-width:170px;">
+      <select id="filt-pago" onchange="renderLista()">
+        <option value="">Todos los pagos</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="seña">Seña</option>
+        <option value="pagado">Pagado</option>
+        <option value="becado">Becado 100%</option>
+        <option value="menor">Precio menor (13–17)</option>
+      </select>
+      <select id="filt-est" onchange="renderLista()">
+        <option value="">Todos</option>
+        <option value="anotado">Anotados</option>
+        <option value="espera">En espera</option>
+      </select>
+      <select id="filt-comida" onchange="renderLista()">
+        <option value="">Todos los menús</option>
+        <option value="normal">Normal</option>
+        <option value="vegetariano">Vegetariano</option>
+      </select>
+    </div>
+    <div class="list-table-wrap"><table class="list-table">
+      <thead><tr>
+        <th>#</th><th>Nombre</th><th>Ciudad</th><th>Teléfono</th>
+        <th>Grupo familiar</th><th>Menú</th><th>Habitación</th><th>Estado de pago</th><th>Adeuda</th>
+      </tr></thead>
+      <tbody id="list-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="overlay" id="m-addRoom">
+  <div class="modal">
+    <h2>Nueva habitación</h2>
+    <div class="modal-form">
+      <div class="fg"><label>Nombre</label><input type="text" id="mr-n" placeholder="Ej: Habitación 35"></div>
+      <div class="fg"><label>Capacidad</label><input type="number" id="mr-c" value="4" min="1" max="50"></div>
+      <div class="fg" id="mr-sub-wrap" style="display:none"><label>Sector (Casa Grande)</label>
+        <select id="mr-sub">
+          <option value="alta">Planta Alta (1–13)</option>
+          <option value="vip">VIP (16–20)</option>
+          <option value="baja">Planta Baja (14,15,21–34)</option>
+        </select>
+      </div>
+    </div>
+    <div class="mactions">
+      <button class="btn-cancel" onclick="closeModal('m-addRoom')">Cancelar</button>
+      <button class="btn-main" style="flex:1;margin-top:0" onclick="confirmAddRoom()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-editRoom">
+  <div class="modal">
+    <h2>Editar habitación</h2>
+    <div class="modal-form">
+      <div class="fg"><label>Nombre</label><input type="text" id="er-n"></div>
+      <div class="fg"><label>Capacidad</label><input type="number" id="er-c" min="1" max="50"></div>
+    </div>
+    <div class="mactions">
+      <button class="btn-cancel" onclick="closeModal('m-editRoom')">Cancelar</button>
+      <button class="btn-main" style="flex:1;margin-top:0" onclick="confirmEditRoom()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-price">
+  <div class="modal">
+    <h2>Precio del retiro</h2>
+    <div class="modal-form">
+      <div class="fg"><label>Precio total ($)</label><input type="number" id="mp-t" min="0" placeholder="0"></div>
+      <div class="fg"><label>Precio menores 13–17 ($)</label><input type="number" id="mp-m" min="0" placeholder="0"></div>
+    </div>
+    <div class="mactions">
+      <button class="btn-cancel" onclick="closeModal('m-price')">Cancelar</button>
+      <button class="btn-main" style="flex:1;margin-top:0" onclick="confirmPrice()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-assign">
+  <div class="modal">
+    <h2 id="ma-t">Asignar habitación</h2>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px" id="ma-s"></p>
+    <div class="assign-list" id="ma-list"></div>
+    <div class="mactions"><button class="btn-cancel" onclick="closeModal('m-assign')">Cerrar</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="m-person">
+  <div class="modal">
+    <h2 id="pd-n"></h2>
+    <div class="dgrid" id="pd-g"></div>
+    <div style="border-top:1px solid var(--warm);padding-top:13px;display:flex;flex-direction:column;gap:9px;">
+      <div class="fg"><label>Menú</label>
+        <select id="pd-comida">
+          <option value="normal">🍽 Normal</option>
+          <option value="vegetariano">🥦 Vegetariano</option>
+        </select>
+      </div>
+      <div class="fg"><label>Nota (opcional)</label><input type="text" id="pd-nota" placeholder="Ej: celíaca, alergia..."></div>
+      <div class="fg"><label>Estado de pago</label>
+        <select id="pd-pago" onchange="onPagoChange('pd')">
+          <option value="pendiente">Pendiente</option>
+          <option value="seña">Seña</option>
+          <option value="pagado">Pagado</option>
+          <option value="becado">Becado 100%</option>
+          <option value="menor">Precio menor (13–17)</option>
+        </select>
+      </div>
+      <div class="pago-extra" id="pd-seña-x">
+        <div class="fg"><label>Monto señado ($)</label><input type="number" id="pd-señaM" placeholder="0" min="0"></div>
+      </div>
+      <button class="btn-main" style="margin-top:0" onclick="updatePago()">Actualizar pago</button>
+    </div>
+    <div class="mactions" style="margin-top:9px;">
+      <button class="btn-cancel" onclick="closeModal('m-person')">Cerrar</button>
+      <button class="btn-main" style="flex:1;margin-top:0;background:var(--red)" onclick="deletePerson()">Eliminar persona</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom confirm modal -->
+<div class="overlay" id="m-confirm">
+  <div class="modal" style="max-width:380px">
+    <h2 id="mc-title" style="font-size:1.25rem;margin-bottom:10px"></h2>
+    <p id="mc-body" style="font-size:0.9rem;color:var(--muted);margin-bottom:20px;line-height:1.5"></p>
+    <div class="mactions">
+      <button class="btn-cancel" onclick="closeModal('m-confirm')">Cancelar</button>
+      <button id="mc-ok" class="btn-main" style="flex:1;margin-top:0;background:var(--red)">Confirmar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay active" id="m-login">
+  <div class="modal" style="max-width:380px">
+    <h2 style="font-size:1.4rem;margin-bottom:10px">Ingreso administrador</h2>
+    <p id="login-msg" style="font-size:0.84rem;color:var(--muted);margin-bottom:14px;line-height:1.45">Ingresá para gestionar los retiros de Villa Marista.</p>
+    <div class="modal-form">
+      <div class="fg"><label>Usuario</label><input id="login-user" type="text" placeholder="admin"></div>
+      <div class="fg"><label>Contraseña</label><input id="login-pass" type="password" placeholder="••••••••"></div>
+    </div>
+    <div class="mactions">
+      <button class="btn-main" style="flex:1;margin-top:0" onclick="login()">Ingresar</button>
+    </div>
+  </div>
+</div>
+  <script src="./assets/js/app.js" defer></script>
 </body>
 </html>
