@@ -119,16 +119,15 @@ function pagoText(p){
 
 // ── NAV ──
 function showPage(id){
+  const pageId=['diagrama','gestion','lista'].includes(id)?id:'gestion';
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
-  if(id==='lista'){
-    document.getElementById('page-lista').classList.add('active');
-    document.querySelectorAll('.nav-tab')[1].classList.add('active');
-    renderLista();
-  } else {
-    document.getElementById('page-gestion').classList.add('active');
-    document.querySelectorAll('.nav-tab')[0].classList.add('active');
-  }
+  document.querySelectorAll('.nav-tab[data-page]').forEach(el=>el.classList.remove('active'));
+  const page=document.getElementById('page-'+pageId);
+  if(page) page.classList.add('active');
+  const tab=document.querySelector(`.nav-tab[data-page="${pageId}"]`);
+  if(tab) tab.classList.add('active');
+  if(pageId==='lista') renderLista();
+  if(pageId==='diagrama') renderDiagrama();
 }
 
 // ── PAGO CHANGE ──
@@ -395,6 +394,7 @@ function render(){
 
   renderRooms('CG');
   renderRooms('CH');
+  renderDiagrama();
 
   // sin hab
   const shEl=document.getElementById('list-sinHab');
@@ -520,6 +520,28 @@ function renderRooms(sector){
       :list.map(r=>roomCardHTML(r)).join('');
     gridEl.classList.toggle('collapsed',!sectionState['cg-'+key]);
   });
+}
+
+function renderDiagramGroup(gridId, list, tagId, emptyLabel){
+  const gridEl=document.getElementById(gridId);
+  if(!gridEl) return;
+  const cap=list.reduce((s,r)=>s+r.capacidad,0);
+  const occ=list.reduce((s,r)=>s+r.personas.length,0);
+  const tagEl=document.getElementById(tagId);
+  if(tagEl) tagEl.textContent=`${occ}/${cap} · ${list.length} hab.`;
+  gridEl.innerHTML=list.length===0
+    ?`<div class="empty" style="grid-column:1/-1"><div class="ei">🏠</div><p>${emptyLabel||'Sin habitaciones.'}</p></div>`
+    :list.map(r=>roomCardHTML(r)).join('');
+}
+
+function renderDiagrama(){
+  const cg=rooms.filter(r=>r.sector==='CG');
+  const alta=cg.filter(r=>getCGSubsector(r)==='alta');
+  const baja=cg.filter(r=>['baja','vip'].includes(getCGSubsector(r)));
+  const ch=rooms.filter(r=>r.sector==='CH');
+  renderDiagramGroup('diag-baja',baja,'tag-diag-baja','Sin habitaciones en planta baja.');
+  renderDiagramGroup('diag-alta',alta,'tag-diag-alta','Sin habitaciones en planta alta.');
+  renderDiagramGroup('diag-ch',ch,'tag-diag-ch','Sin habitaciones en chalecito.');
 }
 
 function renderLista(){

@@ -26,10 +26,63 @@
 </header>
 
 <div class="nav-tabs">
-  <button class="nav-tab active" onclick="showPage('gestion')">🏠 Gestión</button>
-  <button class="nav-tab" onclick="showPage('lista')">📋 Lista general</button>
+  <button class="nav-tab" data-page="diagrama" onclick="showPage('diagrama')">🗺 Diagrama de la casa</button>
+  <button class="nav-tab active" data-page="gestion" onclick="showPage('gestion')">🏠 Gestión</button>
+  <button class="nav-tab" data-page="lista" onclick="showPage('lista')">📋 Lista general</button>
   <button class="nav-tab" onclick="archiveRetiro()">🗃 Archivar retiro</button>
   <button class="nav-tab" style="margin-left:auto;color:#c07060" onclick="openResetConfirm()">🗑 <span class="nav-tab-reset-text">Limpiar todo</span></button>
+</div>
+
+<!-- ═══ PAGE DIAGRAMA ═══ -->
+<div id="page-diagrama" class="page">
+  <div class="diagram-wrap">
+    <div>
+      <div class="diagram-page-title">Diagrama de la casa</div>
+      <div class="diagram-page-sub">Seleccioná una habitación para ver ocupantes o asignar personas.</div>
+    </div>
+    <div class="diagram-card">
+      <div class="diagram-header">
+        <div>
+          <div class="diagram-title">Chalet principal · Planta Baja</div>
+          <div class="tag" id="tag-diag-baja"></div>
+        </div>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-media">
+          <img src="https://github.com/user-attachments/assets/39376570-42b9-4d38-ac80-a81f07d522a6" alt="Chalet principal planta baja">
+        </div>
+        <div id="diag-baja" class="diagram-rooms"></div>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="diagram-header">
+        <div>
+          <div class="diagram-title">Chalet principal · Planta Alta</div>
+          <div class="tag" id="tag-diag-alta"></div>
+        </div>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-media">
+          <img src="https://github.com/user-attachments/assets/cee1c57b-e732-4476-a10c-5b2046673d9d" alt="Chalet principal planta alta">
+        </div>
+        <div id="diag-alta" class="diagram-rooms"></div>
+      </div>
+    </div>
+    <div class="diagram-card">
+      <div class="diagram-header">
+        <div>
+          <div class="diagram-title">Chalecito</div>
+          <div class="tag" id="tag-diag-ch"></div>
+        </div>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-media">
+          <img src="https://github.com/user-attachments/assets/001057da-52b1-4f78-bb35-e0bc45c7ff40" alt="Chalecito">
+        </div>
+        <div id="diag-ch" class="diagram-rooms"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ PAGE GESTIÓN ═══ -->
