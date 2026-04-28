@@ -158,8 +158,8 @@ const DIAGRAM_ZOOM_MIN=0.7;
 const DIAGRAM_ZOOM_MAX=1.6;
 const diagramStates=new Map();
 function getRoomNumber(name){
-  const m=String(name||'').match(/(\d+)(?!.*\d)/);
-  return m?Number(m[0]):null;
+  const matches=String(name||'').match(/\d+/g);
+  return matches?Number(matches[matches.length-1]):null;
 }
 function getRoomLabel(name, fallback){
   const base=name||fallback||'Habitación';
@@ -219,7 +219,9 @@ function resetDiagramView(mapId){
   if(!map) return;
   const state=diagramStates.get(map);
   if(!state) return;
-  state.x=0;state.y=0;state.scale=1;
+  state.x=0;
+  state.y=0;
+  state.scale=1;
   applyDiagramTransform(map,state);
 }
 function buildDiagramRoom(area, number, room, labelPrefix){
