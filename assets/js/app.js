@@ -117,6 +117,230 @@ function pagoText(p){
   return {pagado:'Pagado',pendiente:'Pendiente',seña:'Seña',becado:'Becado 100%',menor:'Precio menor (13-17)'}[p.pago]||p.pago;
 }
 
+// ── DIAGRAM LAYOUTS ──
+const DIAGRAM_LAYOUTS={
+  baja:{
+    cellSize:'68px',
+    grid:[
+      ['r14','r15','hall','r16','r17','r18','r19','r20','hall2','r21','r22','r23'],
+      ['r24','r25','hall','hall','hall','hall','hall','hall','hall2','r26','r27','r28'],
+      ['r29','r30','hall','hall','hall','hall','hall','hall','hall2','r31','r32','r33'],
+      ['r34','r34','hall','hall','hall','hall','hall','hall','hall2','hall2','hall2','hall2'],
+      ['.','.','hall','hall','hall','hall','hall','hall','hall2','.','.','.'],
+      ['extras','extras','extras','extras','extras','extras','extras','extras','extras','extras','extras','extras']
+    ],
+    labelPrefix:'Habitación'
+  },
+  alta:{
+    cellSize:'70px',
+    grid:[
+      ['r1','r2','r3','r4','r5','hall','r6','r7','r8','r9','r10'],
+      ['.','.','.','.','.','hall','.','.','.','.','.'],
+      ['r11','r12','r13','.','.','hall','.','.','.','.','.'],
+      ['.','.','.','.','.','hall','.','.','.','.','.'],
+      ['extras','extras','extras','extras','extras','extras','extras','extras','extras','extras','extras']
+    ],
+    labelPrefix:'Habitación'
+  },
+  ch:{
+    cellSize:'78px',
+    grid:[
+      ['r1','r1','hall','r2','r2','.'],
+      ['r1','r1','hall','r2','r2','.'],
+      ['r3','r3','hall','r4','r4','.'],
+      ['extras','extras','extras','extras','extras','extras']
+    ],
+    labelPrefix:'Chalecito'
+  }
+};
+const DIAGRAM_ZOOM_DELTA=0.08;
+const DIAGRAM_ZOOM_MIN=0.7;
+const DIAGRAM_ZOOM_MAX=1.6;
+const DIAGRAM_KEY_PAN=40;
+const DIAGRAM_NAV_KEYS={
+  ArrowUp:{axis:'y',delta:-1},
+  ArrowDown:{axis:'y',delta:1},
+  ArrowLeft:{axis:'x',delta:-1},
+  ArrowRight:{axis:'x',delta:1}
+};
+const DIAGRAM_ZOOM_KEYS={'+':DIAGRAM_ZOOM_DELTA,'=':DIAGRAM_ZOOM_DELTA,'-':-DIAGRAM_ZOOM_DELTA};
+const diagramStates=new Map();
+function getRoomNumber(name){
+  const match=String(name||'').match(/\d+/);
+  return match?Number(match[0]):null;
+}
+function getRoomLabel(name, fallback){
+  const base=name||fallback||'Habitación';
+  return base.replace(/Habitación/g,'Hab.').trim();
+}
+function getRoomOccupants(r){
+  return (r.personas||[]).map(pid=>people.find(p=>p.id===pid)).filter(Boolean);
+}
+function applyDiagramTransform(map, state){
+  map.style.setProperty('--map-x',state.x+'px');
+  map.style.setProperty('--map-y',state.y+'px');
+  map.style.setProperty('--map-scale',state.scale);
+}
+function clampDiagramScale(scale){
+  return Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,scale));
+}
+function setupDiagramViewport(viewport){
+  const map=viewport.querySelector('.diagram-map');
+  if(!map||diagramStates.has(map)) return;
+  const state={x:0,y:0,scale:1,dragging:false,startX:0,startY:0,originX:0,originY:0};
+  diagramStates.set(map,state);
+  applyDiagramTransform(map,state);
+  viewport.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.diagram-room, .diagram-extras')) return;
+    viewport.setPointerCapture(e.pointerId);
+    state.dragging=true;
+    state.startX=e.clientX;
+    state.startY=e.clientY;
+    state.originX=state.x;
+    state.originY=state.y;
+    viewport.classList.add('dragging');
+  });
+  viewport.addEventListener('pointermove',e=>{
+    if(!state.dragging) return;
+    state.x=state.originX+(e.clientX-state.startX);
+    state.y=state.originY+(e.clientY-state.startY);
+    applyDiagramTransform(map,state);
+  });
+  viewport.addEventListener('pointerup',()=>{
+    state.dragging=false;
+    viewport.classList.remove('dragging');
+  });
+  viewport.addEventListener('pointercancel',()=>{
+    state.dragging=false;
+    viewport.classList.remove('dragging');
+  });
+  viewport.addEventListener('keydown',e=>{
+    const nav=DIAGRAM_NAV_KEYS[e.key];
+    const zoomDelta=DIAGRAM_ZOOM_KEYS[e.key];
+    if(!nav&&!zoomDelta) return;
+    e.preventDefault();
+    if(nav) state[nav.axis]+=nav.delta*DIAGRAM_KEY_PAN;
+    if(zoomDelta) state.scale=clampDiagramScale(state.scale+zoomDelta);
+    applyDiagramTransform(map,state);
+  });
+  viewport.addEventListener('wheel',e=>{
+    if(!(e.ctrlKey||e.metaKey)) return;
+    e.preventDefault();
+    const delta=e.deltaY>0?-DIAGRAM_ZOOM_DELTA:DIAGRAM_ZOOM_DELTA;
+    state.scale=clampDiagramScale(state.scale+delta);
+    applyDiagramTransform(map,state);
+  },{passive:false});
+}
+function initDiagramViewports(){
+  document.querySelectorAll('.diagram-viewport').forEach(setupDiagramViewport);
+}
+function resetDiagramView(mapId){
+  const map=document.getElementById(mapId);
+  if(!map) return;
+  const state=diagramStates.get(map);
+  if(!state) return;
+  state.x=0;
+  state.y=0;
+  state.scale=1;
+  applyDiagramTransform(map,state);
+}
+function buildDiagramRoom(area, number, room, labelPrefix='Habitación'){
+  const btn=document.createElement('button');
+  btn.type='button';
+  btn.className='diagram-room';
+  btn.style.gridArea=area;
+  const fallback=`${labelPrefix} ${number}`;
+  const name=getRoomLabel(room?room.nombre:null,fallback);
+  const occ=room?getRoomOccupants(room):[];
+  const cap=room?room.capacidad:0;
+  if(!room) btn.classList.add('missing');
+  if(room&&cap>0&&occ.length>=cap) btn.classList.add('full');
+  const tipText=room
+    ?(occ.length?occ.map(p=>p.nombre).join(' · '):'Sin ocupantes')
+    :'Habitación sin configurar';
+  btn.innerHTML=`<span class="diagram-room-name">${name}</span><span class="diagram-room-cap">${room?`${occ.length}/${cap}`:'—'}</span><span class="diagram-room-tip">${tipText}</span>`;
+  if(room){
+    btn.onclick=()=>openAssignFromRoom(room.id);
+    btn.setAttribute('aria-label',`${name} (${occ.length}/${cap})`);
+  }else{
+    btn.setAttribute('aria-label',name);
+  }
+  return btn;
+}
+function buildDiagramHall(area, variant){
+  const hall=document.createElement('div');
+  hall.className='diagram-hall'+(variant?' '+variant:'');
+  hall.style.gridArea=area;
+  return hall;
+}
+function buildDiagramExtras(area, list, layoutRooms){
+  const wrap=document.createElement('div');
+  wrap.className='diagram-extras';
+  wrap.style.gridArea=area;
+  const title=document.createElement('div');
+  title.className='diagram-extras-title';
+  title.textContent='Habitaciones fuera del plano';
+  const listEl=document.createElement('div');
+  listEl.className='diagram-extras-list';
+  const extras=list.filter(r=>{
+    const num=getRoomNumber(r.nombre);
+    return !num||!layoutRooms.has(num);
+  });
+  if(extras.length===0){
+    const empty=document.createElement('div');
+    empty.className='diagram-hint';
+    empty.textContent='Sin habitaciones extra.';
+    listEl.appendChild(empty);
+  }else{
+    extras.forEach(r=>{
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='diagram-extra-room';
+      btn.textContent=r.nombre;
+      btn.onclick=()=>openAssignFromRoom(r.id);
+      listEl.appendChild(btn);
+    });
+  }
+  wrap.appendChild(title);
+  wrap.appendChild(listEl);
+  return wrap;
+}
+function renderDiagramMap(mapId, layout, list){
+  const map=document.getElementById(mapId);
+  if(!map||!layout||!layout.grid) return;
+  const grid=layout.grid;
+  map.style.setProperty('--map-cols',grid[0].length);
+  map.style.setProperty('--map-rows',grid.length);
+  map.style.setProperty('--cell-size',layout.cellSize||'70px');
+  map.style.gridTemplateAreas=grid.map(row=>`"${row.join(' ')}"`).join(' ');
+  map.innerHTML='';
+  const roomNumbers=new Set();
+  grid.flat().forEach(token=>{
+    if(token.startsWith('r')) roomNumbers.add(Number(token.slice(1)));
+  });
+  const roomsByNumber=new Map();
+  list.forEach(r=>{
+    const num=getRoomNumber(r.nombre);
+    if(num) roomsByNumber.set(num,r);
+  });
+  const used=new Set();
+  grid.flat().forEach(token=>{
+    if(token==='.'||used.has(token)) return;
+    used.add(token);
+    if(token.startsWith('r')){
+      const num=Number(token.slice(1));
+      map.appendChild(buildDiagramRoom(token,num,roomsByNumber.get(num),layout.labelPrefix));
+      return;
+    }
+    if(token==='extras'){
+      map.appendChild(buildDiagramExtras(token,list,roomNumbers));
+      return;
+    }
+    const variant=token.includes('2')?'secondary':'';
+    map.appendChild(buildDiagramHall(token,variant));
+  });
+}
+
 // ── NAV ──
 function showPage(id){
   const pageId=['diagrama','gestion','lista'].includes(id)?id:'gestion';
@@ -542,6 +766,9 @@ function renderDiagrama(){
   renderDiagramGroup('diag-baja',baja,'tag-diag-baja','Sin habitaciones en planta baja.');
   renderDiagramGroup('diag-alta',alta,'tag-diag-alta','Sin habitaciones en planta alta.');
   renderDiagramGroup('diag-ch',ch,'tag-diag-ch','Sin habitaciones en chalecito.');
+  renderDiagramMap('map-baja',DIAGRAM_LAYOUTS.baja,baja);
+  renderDiagramMap('map-alta',DIAGRAM_LAYOUTS.alta,alta);
+  renderDiagramMap('map-ch',DIAGRAM_LAYOUTS.ch,ch);
 }
 
 function renderLista(){
@@ -623,6 +850,8 @@ async function archiveRetiro(){
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 
 setInterval(()=>{persistState();},AUTOSAVE_INTERVAL_MS);
+
+initDiagramViewports();
 
 async function bootstrap(){
   if(!authToken){
