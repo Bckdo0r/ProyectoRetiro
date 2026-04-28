@@ -153,9 +153,12 @@ const DIAGRAM_LAYOUTS={
     labelPrefix:'Chalecito'
   }
 };
+const DIAGRAM_ZOOM_DELTA=0.08;
+const DIAGRAM_ZOOM_MIN=0.7;
+const DIAGRAM_ZOOM_MAX=1.6;
 const diagramStates=new Map();
 function getRoomNumber(name){
-  const m=String(name||'').match(/\d+/);
+  const m=String(name||'').match(/(\d+)(?!.*\d)/);
   return m?Number(m[0]):null;
 }
 function getRoomLabel(name, fallback){
@@ -203,8 +206,8 @@ function setupDiagramViewport(viewport){
   viewport.addEventListener('wheel',e=>{
     if(!(e.ctrlKey||e.metaKey)) return;
     e.preventDefault();
-    const delta=e.deltaY>0?-0.08:0.08;
-    state.scale=Math.min(1.6,Math.max(0.7,state.scale+delta));
+    const delta=e.deltaY>0?-DIAGRAM_ZOOM_DELTA:DIAGRAM_ZOOM_DELTA;
+    state.scale=Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,state.scale+delta));
     applyDiagramTransform(map,state);
   },{passive:false});
 }
