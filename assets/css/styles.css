@@ -16,6 +16,16 @@ header h1 span{font-style:italic;color:var(--gold);}
 .stat-div{width:1px;height:30px;background:#3d2c1c;}
 .page{display:none;}.page.active{display:block;}
 .main{max-width:1500px;margin:0 auto;padding:26px;display:grid;grid-template-columns:1fr 348px;gap:20px;}
+.diagram-wrap{max-width:1500px;margin:0 auto;padding:26px;display:flex;flex-direction:column;gap:20px;}
+.diagram-page-title{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;}
+.diagram-page-sub{font-size:0.86rem;color:var(--muted);margin-top:4px;}
+.diagram-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.diagram-header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--warm);flex-wrap:wrap;gap:8px;}
+.diagram-title{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;}
+.diagram-body{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:18px;padding:16px 18px 20px;align-items:start;}
+.diagram-media{background:var(--cream);border:1px solid var(--warm);border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:center;min-height:220px;}
+.diagram-media img{max-width:100%;height:auto;border-radius:8px;display:block;}
+.diagram-rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
 .col-left{display:flex;flex-direction:column;gap:18px;}
 .col-right{display:flex;flex-direction:column;gap:16px;}
 .card{background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
@@ -166,6 +176,9 @@ header h1 span{font-style:italic;color:var(--gold);}
   .stat-div{height:24px;}
   .nav-tab{padding:12px 16px;font-size:0.75rem;letter-spacing:0.07em;}
   .main{grid-template-columns:1fr;padding:16px;}
+  .diagram-wrap{padding:16px;}
+  .diagram-body{grid-template-columns:1fr;padding:14px 16px 18px;}
+  .diagram-rooms{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}
   .col-left,.col-right{gap:14px;}
   .rooms-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:10px 14px 16px;}
   #page-lista{padding:16px;}
@@ -187,6 +200,10 @@ header h1 span{font-style:italic;color:var(--gold);}
   .nav-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .nav-tab{padding:11px 14px;font-size:0.72rem;white-space:nowrap;flex-shrink:0;}
   .main{padding:12px;gap:12px;}
+  .diagram-wrap{padding:12px;gap:16px;}
+  .diagram-page-title{font-size:1.6rem;}
+  .diagram-body{gap:12px;padding:12px;}
+  .diagram-rooms{grid-template-columns:1fr;}
   .col-left,.col-right{gap:12px;}
   /* Cards */
   .card-header{padding:13px 15px;}
