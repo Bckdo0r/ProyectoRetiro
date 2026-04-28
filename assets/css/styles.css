@@ -26,6 +26,7 @@ header h1 span{font-style:italic;color:var(--gold);}
 .diagram-media{background:var(--cream);border:1px solid var(--warm);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:260px;}
 .diagram-viewport{position:relative;border-radius:10px;background:#faf7f2;border:1px solid var(--warm);overflow:hidden;height:360px;cursor:grab;}
 .diagram-viewport.dragging{cursor:grabbing;}
+.diagram-viewport:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .diagram-map{position:relative;display:grid;gap:8px;padding:14px;transform:translate(var(--map-x,0px),var(--map-y,0px)) scale(var(--map-scale,1));transform-origin:0 0;width:calc(var(--map-cols,10)*var(--cell-size,70px));height:calc(var(--map-rows,6)*var(--cell-size,70px));grid-template-columns:repeat(var(--map-cols,10),var(--cell-size,70px));grid-template-rows:repeat(var(--map-rows,6),var(--cell-size,70px));transition:transform 0.05s ease-out;}
 .diagram-room{background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;font-size:0.72rem;text-align:left;font-family:'DM Sans',sans-serif;cursor:pointer;position:relative;box-shadow:0 3px 10px rgba(122,92,60,0.09);}
 .diagram-room.full{border-color:#c4855a;background:#fff6f2;}

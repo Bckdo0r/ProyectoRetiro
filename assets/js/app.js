@@ -156,6 +156,7 @@ const DIAGRAM_LAYOUTS={
 const DIAGRAM_ZOOM_DELTA=0.08;
 const DIAGRAM_ZOOM_MIN=0.7;
 const DIAGRAM_ZOOM_MAX=1.6;
+const DIAGRAM_KEY_PAN=40;
 const diagramStates=new Map();
 function getRoomNumber(name){
   const matches=String(name||'').match(/\d+/g);
@@ -203,6 +204,17 @@ function setupDiagramViewport(viewport){
     state.dragging=false;
     viewport.classList.remove('dragging');
   });
+  viewport.addEventListener('keydown',e=>{
+    if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','+','=','-'].includes(e.key)) return;
+    e.preventDefault();
+    if(e.key==='ArrowUp') state.y-=DIAGRAM_KEY_PAN;
+    if(e.key==='ArrowDown') state.y+=DIAGRAM_KEY_PAN;
+    if(e.key==='ArrowLeft') state.x-=DIAGRAM_KEY_PAN;
+    if(e.key==='ArrowRight') state.x+=DIAGRAM_KEY_PAN;
+    if(e.key==='+'||e.key==='=') state.scale=Math.min(DIAGRAM_ZOOM_MAX,state.scale+DIAGRAM_ZOOM_DELTA);
+    if(e.key==='-') state.scale=Math.max(DIAGRAM_ZOOM_MIN,state.scale-DIAGRAM_ZOOM_DELTA);
+    applyDiagramTransform(map,state);
+  });
   viewport.addEventListener('wheel',e=>{
     if(!(e.ctrlKey||e.metaKey)) return;
     e.preventDefault();
@@ -224,12 +236,12 @@ function resetDiagramView(mapId){
   state.scale=1;
   applyDiagramTransform(map,state);
 }
-function buildDiagramRoom(area, number, room, labelPrefix){
+function buildDiagramRoom(area, number, room, labelPrefix='Habitación'){
   const btn=document.createElement('button');
   btn.type='button';
   btn.className='diagram-room';
   btn.style.gridArea=area;
-  const fallback=`${labelPrefix||'Habitación'} ${number}`;
+  const fallback=`${labelPrefix} ${number}`;
   const name=getRoomLabel(room?room.nombre:null,fallback);
   const occ=room?getRoomOccupants(room):[];
   const cap=room?room.capacidad:0;
