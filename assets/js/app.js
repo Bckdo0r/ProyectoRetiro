@@ -171,7 +171,7 @@ function getRoomNumber(name){
 }
 function getRoomLabel(name, fallback){
   const base=name||fallback||'Habitación';
-  return base.replace('Habitación','Hab.').trim();
+  return base.replace(/Habitación/g,'Hab.').trim();
 }
 function getRoomOccupants(r){
   return (r.personas||[]).map(pid=>people.find(p=>p.id===pid)).filter(Boolean);
@@ -180,6 +180,9 @@ function applyDiagramTransform(map, state){
   map.style.setProperty('--map-x',state.x+'px');
   map.style.setProperty('--map-y',state.y+'px');
   map.style.setProperty('--map-scale',state.scale);
+}
+function clampDiagramScale(scale){
+  return Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,scale));
 }
 function setupDiagramViewport(viewport){
   const map=viewport.querySelector('.diagram-map');
@@ -217,16 +220,14 @@ function setupDiagramViewport(viewport){
     if(!nav&&!zoomDelta) return;
     e.preventDefault();
     if(nav) state[nav.axis]+=nav.delta*DIAGRAM_KEY_PAN;
-    if(zoomDelta){
-      state.scale=Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,state.scale+zoomDelta));
-    }
+    if(zoomDelta) state.scale=clampDiagramScale(state.scale+zoomDelta);
     applyDiagramTransform(map,state);
   });
   viewport.addEventListener('wheel',e=>{
     if(!(e.ctrlKey||e.metaKey)) return;
     e.preventDefault();
     const delta=e.deltaY>0?-DIAGRAM_ZOOM_DELTA:DIAGRAM_ZOOM_DELTA;
-    state.scale=Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,state.scale+delta));
+    state.scale=clampDiagramScale(state.scale+delta);
     applyDiagramTransform(map,state);
   },{passive:false});
 }
