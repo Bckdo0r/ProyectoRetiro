@@ -157,10 +157,17 @@ const DIAGRAM_ZOOM_DELTA=0.08;
 const DIAGRAM_ZOOM_MIN=0.7;
 const DIAGRAM_ZOOM_MAX=1.6;
 const DIAGRAM_KEY_PAN=40;
+const DIAGRAM_NAV_KEYS={
+  ArrowUp:{axis:'y',delta:-1},
+  ArrowDown:{axis:'y',delta:1},
+  ArrowLeft:{axis:'x',delta:-1},
+  ArrowRight:{axis:'x',delta:1}
+};
+const DIAGRAM_ZOOM_KEYS={'+':DIAGRAM_ZOOM_DELTA,'=':DIAGRAM_ZOOM_DELTA,'-':-DIAGRAM_ZOOM_DELTA};
 const diagramStates=new Map();
 function getRoomNumber(name){
-  const matches=String(name||'').match(/\d+/g);
-  return matches?Number(matches[matches.length-1]):null;
+  const match=String(name||'').match(/\d+/);
+  return match?Number(match[0]):null;
 }
 function getRoomLabel(name, fallback){
   const base=name||fallback||'Habitación';
@@ -181,7 +188,7 @@ function setupDiagramViewport(viewport){
   diagramStates.set(map,state);
   applyDiagramTransform(map,state);
   viewport.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.diagram-room')||e.target.closest('.diagram-extras')) return;
+    if(e.target.closest('.diagram-room, .diagram-extras')) return;
     viewport.setPointerCapture(e.pointerId);
     state.dragging=true;
     state.startX=e.clientX;
@@ -205,14 +212,14 @@ function setupDiagramViewport(viewport){
     viewport.classList.remove('dragging');
   });
   viewport.addEventListener('keydown',e=>{
-    if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','+','=','-'].includes(e.key)) return;
+    const nav=DIAGRAM_NAV_KEYS[e.key];
+    const zoomDelta=DIAGRAM_ZOOM_KEYS[e.key];
+    if(!nav&&!zoomDelta) return;
     e.preventDefault();
-    if(e.key==='ArrowUp') state.y-=DIAGRAM_KEY_PAN;
-    if(e.key==='ArrowDown') state.y+=DIAGRAM_KEY_PAN;
-    if(e.key==='ArrowLeft') state.x-=DIAGRAM_KEY_PAN;
-    if(e.key==='ArrowRight') state.x+=DIAGRAM_KEY_PAN;
-    if(e.key==='+'||e.key==='=') state.scale=Math.min(DIAGRAM_ZOOM_MAX,state.scale+DIAGRAM_ZOOM_DELTA);
-    if(e.key==='-') state.scale=Math.max(DIAGRAM_ZOOM_MIN,state.scale-DIAGRAM_ZOOM_DELTA);
+    if(nav) state[nav.axis]+=nav.delta*DIAGRAM_KEY_PAN;
+    if(zoomDelta){
+      state.scale=Math.min(DIAGRAM_ZOOM_MAX,Math.max(DIAGRAM_ZOOM_MIN,state.scale+zoomDelta));
+    }
     applyDiagramTransform(map,state);
   });
   viewport.addEventListener('wheel',e=>{
